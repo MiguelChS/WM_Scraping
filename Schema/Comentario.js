@@ -4,14 +4,16 @@
 let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 let comentarioSchema = new Schema({
-    date:Date,
-    redSocial:Number,
-    message:String,
-    Author:String,
-    idMessage:String,
-    idResponse:String,
-    categories:String,
-    routes:String
+    date:Date,//1
+    redSocial:Number,//2
+    message:String,//3
+    Author:String,//4
+    country:String,//5
+    idMessage:String,//8
+    idResponse:String,//9
+    idCliente:Number,
+    categories:String,//12
+    routes:String//13
 
 },{collection:"comentario"});
 let Comentario = mongoose.model('comentario',comentarioSchema);

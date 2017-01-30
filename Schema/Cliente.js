@@ -5,8 +5,7 @@ let mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 let clientSchema = new Schema({
     id:Number,
-    name:String,
-    Account:String
+    name:String
 },{collection:"cliente"});
 let Cliente = mongoose.model('Cliente',clientSchema);
 module.exports = Cliente;
