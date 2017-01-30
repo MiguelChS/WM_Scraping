@@ -12,7 +12,7 @@ let Cliente = require('./Schema/Cliente');
 let Comentario = require('./Schema/Comentario');
 let RedSocial = require('./Schema/RedSocial');
 mongoose.Promise = Promise;
-mongoose.connect("mongodb://localhost/Comentarios")
+mongoose.connect(process.env.MONGODB_WM)
     .catch((err)=>{
         console.log('error mongodb connect');
     });
