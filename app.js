@@ -11,6 +11,7 @@ let mongoose = require("mongoose");
 let Cliente = require('./Schema/Cliente');
 let Comentario = require('./Schema/Comentario');
 let RedSocial = require('./Schema/RedSocial');
+let Nombre = require('./Schema/nombre');
 mongoose.Promise = Promise;
 mongoose.connect(process.env.MONGODB_WM)
     .catch((err)=>{
@@ -39,7 +40,26 @@ function verificarIdMessage(idMessage,arrayIdMessage) {
     return false;
 }
 
-function readExcel(buffer,idRedSocial,groupClient,lastDateIdMessage) {
+function LimpiarNombre(nombre) {
+    nombre = nombre.replace(new RegExp("[á]",'g'),"a");
+    nombre = nombre.replace(new RegExp("[é]",'g'),"3");
+    nombre = nombre.replace(new RegExp("[í]",'g'),"i");
+    nombre = nombre.replace(new RegExp("[ó]",'g'),"o");
+    nombre = nombre.replace(new RegExp("[ú]",'g'),"u");
+    return nombre;
+}
+
+function searchGenero(nombre,ArrayGeneros) {
+    for(let i = 0; i < ArrayGeneros.length;i++){
+        let regex = new RegExp(`\\s${ArrayGeneros[i].nombre.toUpperCase()}\\s`);
+        if(regex.test(` ${nombre.toUpperCase()} `)){
+            return ArrayGeneros[i].genero;
+        }
+    }
+    return null;
+}
+
+function readExcel(buffer,idRedSocial,groupClient,lastDateIdMessage,arrayNombre) {
     console.log(`redSocial ${idRedSocial} --> `,lastDateIdMessage);
     let workbook = xlsx.read(buffer,{type:"buffer"});
     let worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -71,6 +91,8 @@ function readExcel(buffer,idRedSocial,groupClient,lastDateIdMessage) {
             redSocial:idRedSocial,//2
             message:auxArray[2],//3
             Author:auxArray[3],//4
+            fullName:auxArray[5],
+            generoInferido: searchGenero(LimpiarNombre(auxArray[5]),arrayNombre),
             country:auxArray[4],//5
             idMessage:auxArray[7],//8
             idResponse:auxArray[8],//9
@@ -211,20 +233,23 @@ function startProcess() {
         promiseArray.push(Cliente.find());
         promiseArray.push(searchLastDateIdMessage(1));
         promiseArray.push(searchLastDateIdMessage(2));
+        promiseArray.push(Nombre.find());
         Promise.all(promiseArray)
             .then((result)=>{
                 let request = result[0];
                 let groupClient = result[1];
                 let lastDateTwitter = result[2];
                 let lastDateFacebook = result[3];
+                let arrayNombre = result[4];
                 let resultComment = [];
                 downloadExcel(request,"1",lastDateTwitter)
                     .then((bufferTwitter)=>{
-                        resultComment = resultComment.concat(readExcel(bufferTwitter,1,groupClient,lastDateTwitter));
+                        resultComment = resultComment.concat(readExcel(bufferTwitter,1,groupClient,lastDateTwitter,arrayNombre));
 
                         downloadExcel(request,"2",lastDateFacebook)
                             .then((bufferFacebook)=>{
-                                resultComment = resultComment.concat(readExcel(bufferFacebook,2,groupClient,lastDateFacebook));
+                                resultComment = resultComment.concat(readExcel(bufferFacebook,2,groupClient,lastDateFacebook,arrayNombre));
+
                                 if(resultComment.length != 0){
                                     Comentario.collection.insert(resultComment,(err)=>{
                                         if(err){

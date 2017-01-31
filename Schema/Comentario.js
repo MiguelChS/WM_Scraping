@@ -8,6 +8,8 @@ let comentarioSchema = new Schema({
     redSocial:Number,//2
     message:String,//3
     Author:String,//4
+    fullName:String,//6
+    generoInferido:String,
     country:String,//5
     idMessage:String,//8
     idResponse:String,//9
