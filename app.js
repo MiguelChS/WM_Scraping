@@ -281,7 +281,7 @@ function startProcess() {
 }
 
 function start(){
-    console.log("Iniciando Proceso");
+    console.log(`Iniciando Proceso ${moment().format("DD-MM-YYYY HH:mm:ss")}`);
     startProcess()
         .then(()=>{
             setTimeout(()=>{
