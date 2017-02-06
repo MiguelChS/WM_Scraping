@@ -12,6 +12,7 @@ let Cliente = require('./Schema/Cliente');
 let Comentario = require('./Schema/Comentario');
 let RedSocial = require('./Schema/RedSocial');
 let Nombre = require('./Schema/nombre');
+let Genero = require("./Ultilidades/definirGenero");
 mongoose.Promise = Promise;
 mongoose.connect(process.env.MONGODB_WM)
     .catch((err)=>{
@@ -40,27 +41,9 @@ function verificarIdMessage(idMessage,arrayIdMessage) {
     return false;
 }
 
-function LimpiarNombre(nombre) {
-    nombre = nombre.replace(new RegExp("[á]",'g'),"a");
-    nombre = nombre.replace(new RegExp("[é]",'g'),"3");
-    nombre = nombre.replace(new RegExp("[í]",'g'),"i");
-    nombre = nombre.replace(new RegExp("[ó]",'g'),"o");
-    nombre = nombre.replace(new RegExp("[ú]",'g'),"u");
-    return nombre;
-}
-
-function searchGenero(nombre,ArrayGeneros) {
-    for(let i = 0; i < ArrayGeneros.length;i++){
-        let regex = new RegExp(`\\s${ArrayGeneros[i].nombre.toUpperCase()}\\s`);
-        if(regex.test(` ${nombre.toUpperCase()} `)){
-            return ArrayGeneros[i].genero;
-        }
-    }
-    return null;
-}
-
 function readExcel(buffer,idRedSocial,groupClient,lastDateIdMessage,arrayNombre) {
     console.log(`redSocial ${idRedSocial} --> `,lastDateIdMessage);
+    let utiGenero = new Genero();
     let workbook = xlsx.read(buffer,{type:"buffer"});
     let worksheet = workbook.Sheets[workbook.SheetNames[0]];
     let arrayLetra = ['!','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
@@ -92,7 +75,7 @@ function readExcel(buffer,idRedSocial,groupClient,lastDateIdMessage,arrayNombre)
             message:auxArray[2],//3
             Author:auxArray[3],//4
             fullName:auxArray[5],
-            generoInferido: searchGenero(LimpiarNombre(auxArray[5]),arrayNombre),
+            generoInferido: utiGenero.getGenero(auxArray[5],arrayNombre),
             country:auxArray[4],//5
             idMessage:auxArray[7],//8
             idResponse:auxArray[8],//9
@@ -230,10 +213,10 @@ function startProcess() {
     return new Promise((resolve,reject)=>{
         let promiseArray = [];
         promiseArray.push(log());
-        promiseArray.push(Cliente.find());
+        promiseArray.push(Cliente.find({}));
         promiseArray.push(searchLastDateIdMessage(1));
         promiseArray.push(searchLastDateIdMessage(2));
-        promiseArray.push(Nombre.find());
+        promiseArray.push(Nombre.find({}).sort({tipoName:-1}));
         Promise.all(promiseArray)
             .then((result)=>{
                 let request = result[0];
